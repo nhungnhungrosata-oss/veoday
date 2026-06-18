@@ -266,7 +266,7 @@ export default function App() {
       <Toaster position="top-center" richColors />
       <header className="sticky top-0 z-50 bg-gradient-to-br from-brand-blue to-brand-blue-dark shadow-md">
         <div className="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between">
-          <div className="flex items-center gap-2"><div className="w-10 h-10 rounded-xl bg-brand-yellow-light flex items-center justify-center"><Sparkles className="w-5 h-5 text-brand-text-title" /></div><h1 className="font-bold text-lg text-white">ClipBrand AI</h1></div>
+          <div className="flex items-center gap-2"><div className="w-10 h-10 rounded-xl bg-brand-yellow-light flex items-center justify-center"><Sparkles className="w-5 h-5 text-brand-text-title" /></div><h1 className="font-bold text-lg text-white">Tạo Kịch Bản Video</h1></div>
           <Button onClick={() => { setState({ ...INITIAL_STATE, images: state.images, selectedImageIndex: state.selectedImageIndex }); setCurrentResult(null); }} className="bg-white/15 hover:bg-white/30 text-white text-xs px-3 py-2 border border-white/30"><RefreshCw className="w-4 h-4" />Tạo mới</Button>
         </div>
       </header>

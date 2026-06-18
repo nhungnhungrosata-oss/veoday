@@ -1,4 +1,4 @@
-# ClipBrand AI - bản đã fix giao diện
+# Tạo Kịch Bản Video - bản đã fix giao diện
 
 Bản này đã chỉnh:
 
