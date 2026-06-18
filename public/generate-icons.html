@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <title>Tạo Icon PWA ClipBrand AI</title>
+  <style>
+    body { font-family: 'Inter', sans-serif; background: #F0F9FF; padding: 20px; }
+    .grid { display: flex; flex-wrap: wrap; gap: 20px; }
+    .card { background: white; padding: 16px; border-radius: 12px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); text-align: center; }
+    canvas { border-radius: 20%; box-shadow: 0 4px 12px rgba(14,165,233,0.2); }
+    button { margin-top: 12px; background: #0EA5E9; color: white; border: none; padding: 8px 16px; border-radius: 8px; cursor: pointer; font-weight: 600; transition: background 0.2s; }
+    button:hover { background: #0369A1; }
+  </style>
+</head>
+<body>
+  <h2>Tạo bộ icon PWA tự động</h2>
+  <div class="grid" id="container"></div>
+
+  <script>
+    const sizes = [72, 96, 128, 144, 152, 192, 384, 512];
+    const container = document.getElementById('container');
+
+    sizes.forEach(size => {
+      const card = document.createElement('div');
+      card.className = 'card';
+      
+      const canvas = document.createElement('canvas');
+      canvas.width = size;
+      canvas.height = size;
+      const ctx = canvas.getContext('2d');
+
+      // Nền gradient
+      const gradient = ctx.createLinearGradient(0, 0, size, size);
+      gradient.addColorStop(0, '#0EA5E9');
+      gradient.addColorStop(1, '#0369A1');
+      ctx.fillStyle = gradient;
+      ctx.fillRect(0, 0, size, size);
+
+      // Render logo text (chữ Vàng)
+      ctx.fillStyle = '#F5A623';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.font = `bold ${size * 0.4}px sans-serif`;
+      ctx.fillText('CB', size/2, size/2);
+
+      // Thêm nút và logic tải xuống
+      const label = document.createElement('p');
+      label.textContent = `icon-${size}.png`;
+
+      const btn = document.createElement('button');
+      btn.textContent = 'Tải xuống';
+      btn.onclick = () => {
+        const link = document.createElement('a');
+        link.download = `icon-${size}.png`;
+        link.href = canvas.toDataURL('image/png');
+        link.click();
+      };
+
+      // Scale lại canvas cho dễ nhìn trên browser
+      if (size > 192) {
+        canvas.style.width = '192px';
+        canvas.style.height = '192px';
+      }
+
+      card.appendChild(canvas);
+      card.appendChild(label);
+      card.appendChild(btn);
+      container.appendChild(card);
+    });
+  </script>
+</body>
+</html>

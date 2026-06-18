@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <title>API Key Settings</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              blue: '#0EA5E9',
+              yellow: '#F5A623',
+              border: '#BAE6FD'
+            }
+          }
+        }
+      }
+    }
+  </script>
+</head>
+<body class="bg-slate-50 text-slate-800 font-sans p-4 md:p-8 max-w-4xl mx-auto">
+  
+  <h1 class="text-2xl font-bold text-brand-blue mb-6">Quản lý API Keys</h1>
+  
+  <div class="flex gap-2 mb-6 overflow-x-auto pb-2">
+    <button onclick="switchTab('google')" id="tab-google" class="px-4 py-2 rounded-lg font-semibold bg-brand-blue text-white whitespace-nowrap">Google Gemini</button>
+    <button onclick="switchTab('openai')" id="tab-openai" class="px-4 py-2 rounded-lg font-semibold bg-white border border-brand-border text-slate-600 whitespace-nowrap hover:bg-slate-50">OpenAI ChatGPT</button>
+    <button onclick="switchTab('deepseek')" id="tab-deepseek" class="px-4 py-2 rounded-lg font-semibold bg-white border border-brand-border text-slate-600 whitespace-nowrap hover:bg-slate-50">DeepSeek</button>
+    <button onclick="switchTab('settings')" id="tab-settings" class="px-4 py-2 rounded-lg font-semibold bg-white border border-brand-border text-slate-600 whitespace-nowrap hover:bg-slate-50">Cài đặt chung</button>
+  </div>
+
+  <!-- TAB 1: GOOGLE -->
+  <div id="content-google" class="tab-content bg-white p-6 rounded-xl border border-brand-border shadow-sm mb-6">
+    <h2 class="text-xl font-bold mb-4">Google Gemini</h2>
+    <form onsubmit="addKey(event, 'google')" class="flex flex-col md:flex-row gap-3 mb-6">
+      <div class="flex-1 relative">
+        <input type="password" id="input-key-google" placeholder="Nhập API Key..." class="w-full px-3 py-2 border border-brand-border rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-blue" required>
+        <button type="button" onclick="togglePassword('input-key-google')" class="absolute right-3 top-2.5 text-slate-400 hover:text-slate-600">👁️</button>
+      </div>
+      <input type="text" id="input-label-google" placeholder="Tên gợi nhớ..." class="px-3 py-2 border border-brand-border rounded-lg" required>
+      <select id="input-tier-google" class="px-3 py-2 border border-brand-border rounded-lg">
+        <option value="free">Free</option>
+        <option value="paid">Paid</option>
+      </select>
+      <button type="submit" class="bg-brand-yellow text-[#0C4A6E] font-bold px-4 py-2 rounded-lg hover:brightness-105">+ Thêm key</button>
+    </form>
+    <div class="overflow-x-auto">
+      <table class="w-full text-left border-collapse">
+        <thead>
+          <tr class="bg-slate-50 border-y border-brand-border">
+            <th class="p-3 font-semibold w-1/3">Tên (Label)</th>
+            <th class="p-3 font-semibold">Cấp bậc</th>
+            <th class="p-3 font-semibold">Trạng thái</th>
+            <th class="p-3 font-semibold">Thao tác</th>
+          </tr>
+        </thead>
+        <tbody id="list-google" class="divide-y divide-brand-border"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- TAB 2: OPENAI -->
+  <div id="content-openai" class="tab-content bg-white p-6 rounded-xl border border-brand-border shadow-sm mb-6 hidden">
+    <h2 class="text-xl font-bold mb-4">OpenAI ChatGPT</h2>
+    <div class="mb-4">
+      <label class="font-semibold mr-2 text-sm">Model mặc định:</label>
+      <select id="model-openai" class="px-3 py-2 border border-brand-border rounded-lg text-sm bg-slate-50" onchange="updateModel('openai', this.value)">
+        <option value="gpt-4o-mini">gpt-4o-mini</option>
+        <option value="gpt-4o">gpt-4o</option>
+        <option value="gpt-3.5-turbo">gpt-3.5-turbo</option>
+      </select>
+    </div>
+    <form onsubmit="addKey(event, 'openai')" class="flex flex-col md:flex-row gap-3 mb-6">
+      <div class="flex-1 relative">
+        <input type="password" id="input-key-openai" placeholder="Nhập API Key..." class="w-full px-3 py-2 border border-brand-border rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-blue" required>
+        <button type="button" onclick="togglePassword('input-key-openai')" class="absolute right-3 top-2.5 text-slate-400 hover:text-slate-600">👁️</button>
+      </div>
+      <input type="text" id="input-label-openai" placeholder="Tên gợi nhớ..." class="px-3 py-2 border border-brand-border rounded-lg" required>
+      <select id="input-tier-openai" class="px-3 py-2 border border-brand-border rounded-lg">
+        <option value="free">Free</option>
+        <option value="paid">Paid</option>
+      </select>
+      <button type="submit" class="bg-brand-yellow text-[#0C4A6E] font-bold px-4 py-2 rounded-lg hover:brightness-105">+ Thêm key</button>
+    </form>
+    <div class="overflow-x-auto">
+      <table class="w-full text-left border-collapse">
+        <tbody id="list-openai" class="divide-y divide-brand-border"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- TAB 3: DEEPSEEK -->
+  <div id="content-deepseek" class="tab-content bg-white p-6 rounded-xl border border-brand-border shadow-sm mb-6 hidden">
+    <h2 class="text-xl font-bold mb-4">DeepSeek</h2>
+    <div class="mb-4">
+      <label class="font-semibold mr-2 text-sm">Model mặc định:</label>
+      <select id="model-deepseek" class="px-3 py-2 border border-brand-border rounded-lg text-sm bg-slate-50" onchange="updateModel('deepseek', this.value)">
+        <option value="deepseek-v4-flash">deepseek-v4-flash</option>
+        <option value="deepseek-v4-pro">deepseek-v4-pro</option>
+        <option value="deepseek-chat">deepseek-chat</option>
+        <option value="deepseek-reasoner">deepseek-reasoner</option>
+      </select>
+    </div>
+    <form onsubmit="addKey(event, 'deepseek')" class="flex flex-col md:flex-row gap-3 mb-6">
+      <div class="flex-1 relative">
+        <input type="password" id="input-key-deepseek" placeholder="Nhập API Key..." class="w-full px-3 py-2 border border-brand-border rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-blue" required>
+        <button type="button" onclick="togglePassword('input-key-deepseek')" class="absolute right-3 top-2.5 text-slate-400 hover:text-slate-600">👁️</button>
+      </div>
+      <input type="text" id="input-label-deepseek" placeholder="Tên gợi nhớ..." class="px-3 py-2 border border-brand-border rounded-lg" required>
+      <select id="input-tier-deepseek" class="px-3 py-2 border border-brand-border rounded-lg">
+        <option value="free">Free</option>
+        <option value="paid">Paid</option>
+      </select>
+      <button type="submit" class="bg-brand-yellow text-[#0C4A6E] font-bold px-4 py-2 rounded-lg hover:brightness-105">+ Thêm key</button>
+    </form>
+    <div class="overflow-x-auto">
+      <table class="w-full text-left border-collapse">
+        <tbody id="list-deepseek" class="divide-y divide-brand-border"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- TAB 4: CÀI ĐẶT CHUNG -->
+  <div id="content-settings" class="tab-content bg-white p-6 rounded-xl border border-brand-border shadow-sm mb-6 hidden">
+    <h2 class="text-xl font-bold mb-4">Cài đặt chung &amp; Sao lưu</h2>
+    <div class="space-y-6">
+      <div class="flex flex-col md:flex-row gap-4 p-4 bg-slate-50 rounded-lg">
+        <div>
+          <label class="block font-semibold mb-2">Provider ưu tiên (Fallback):</label>
+          <select class="px-3 py-2 border border-brand-border rounded-lg min-w-[250px]">
+            <option>Google → DeepSeek → OpenAI</option>
+            <option>DeepSeek → Google → OpenAI</option>
+            <option>Google → OpenAI → DeepSeek</option>
+          </select>
+          <p class="text-slate-500 text-sm mt-2">Hệ thống sẽ thử gọi theo thứ tự này nếu API hiện tại hết Quota.</p>
+        </div>
+      </div>
+
+      <div class="flex flex-wrap gap-3 pt-4 border-t border-brand-border">
+        <button onclick="exportConfig()" class="bg-brand-blue text-white px-4 py-2 rounded-lg font-semibold hover:bg-sky-600 transition-colors">
+          ⬇️ Xuất cấu hình (JSON)
+        </button>
+        <button onclick="document.getElementById('import-file').click()" class="bg-white border text-nowrap border-brand-border text-brand-blue px-4 py-2 rounded-lg font-semibold hover:bg-slate-50 transition-colors">
+          ⬆️ Nhập cấu hình
+        </button>
+        <input type="file" id="import-file" accept=".json" class="hidden" onchange="importConfig(event)">
+        <button onclick="clearAll()" class="md:ml-auto bg-red-50 text-red-600 border border-red-200 px-4 py-2 rounded-lg font-semibold hover:bg-red-100 transition-colors">
+          🗑 Xoá tất cả key
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const STORAGE_KEY = "api_key_manager_v1";
+    let apiConfig = {
+      google: { keys: [], currentIndex: 0, model: "gemini-1.5-flash" },
+      openai: { keys: [], currentIndex: 0, model: "gpt-4o-mini" },
+      deepseek: { keys: [], currentIndex: 0, model: "deepseek-v4-flash" }
+    };
+
+    function loadConfig() {
+      const stored = localStorage.getItem(STORAGE_KEY);
+      if (stored) {
+        try {
+          apiConfig = {...apiConfig, ...JSON.parse(decodeURIComponent(escape(atob(stored))))};
+        } catch(e) { console.error(e) }
+      }
+      renderAll();
+    }
+
+    function saveConfig() {
+      localStorage.setItem(STORAGE_KEY, btoa(unescape(encodeURIComponent(JSON.stringify(apiConfig)))));
+      renderAll();
+    }
+
+    function togglePassword(inputId) {
+      const input = document.getElementById(inputId);
+      input.type = input.type === 'password' ? 'text' : 'password';
+    }
+
+    function switchTab(tab) {
+      document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
+      document.getElementById('content-' + tab).classList.remove('hidden');
+      
+      const tabs = ['google', 'openai', 'deepseek', 'settings'];
+      tabs.forEach(t => {
+        const btn = document.getElementById('tab-' + t);
+        if (t === tab) {
+          btn.className = "px-4 py-2 rounded-lg font-semibold bg-brand-blue text-white whitespace-nowrap transition-colors";
+        } else {
+          btn.className = "px-4 py-2 rounded-lg font-semibold bg-white border border-brand-border text-slate-600 whitespace-nowrap hover:bg-slate-50 transition-colors";
+        }
+      });
+    }
+
+    function addKey(e, provider) {
+      e.preventDefault();
+      const keyInput = document.getElementById('input-key-' + provider);
+      const labelInput = document.getElementById('input-label-' + provider);
+      const tierInput = document.getElementById('input-tier-' + provider);
+      
+      const key = keyInput.value.trim();
+      const label = labelInput.value.trim();
+      const tier = tierInput.value;
+      
+      if (!apiConfig[provider]) return;
+      if (apiConfig[provider].keys.some(k => k.key === key)) {
+        alert("API Key này đã tồn tại!");
+        return;
+      }
+      
+      apiConfig[provider].keys.push({ key, label, tier, active: true });
+      saveConfig();
+      e.target.reset();
+    }
+
+    function removeKey(provider, label) {
+      if(!confirm("Bạn có chắc muốn xoá key: " + label + "?")) return;
+      apiConfig[provider].keys = apiConfig[provider].keys.filter(k => k.label !== label);
+      saveConfig();
+    }
+
+    function updateModel(provider, model) {
+      apiConfig[provider].model = model;
+      saveConfig();
+    }
+
+    function renderList(provider) {
+      if(!document.getElementById('list-' + provider)) return;
+      const tbody = document.getElementById('list-' + provider);
+      tbody.innerHTML = '';
+      
+      if (apiConfig[provider].model) {
+        const sel = document.getElementById('model-' + provider);
+        if (sel) sel.value = apiConfig[provider].model;
+      }
+      
+      if (apiConfig[provider].keys.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="4" class="p-4 text-center text-slate-500">Chưa có key nào. Hãy thêm ở phía trên.</td></tr>';
+        return;
+      }
+      
+      apiConfig[provider].keys.forEach(k => {
+        const tr = document.createElement('tr');
+        const statusHTML = k.active 
+          ? '<span class="px-2 py-1 bg-green-50 text-green-600 rounded text-sm font-semibold border border-green-200">✅ Hoạt động</span>' 
+          : '<span class="px-2 py-1 bg-red-50 text-red-600 rounded text-sm font-semibold border border-red-200" title="' + (k.failReason||'') + '">❌ ' + (k.failReason?.includes('429')?'Hết quota':'Lỗi/Invalid') + '</span>';
+        
+        const tierLabel = k.tier === 'paid' 
+          ? '<span class="text-brand-yellow font-bold text-xs uppercase bg-yellow-50 px-2 py-1 rounded">Paid</span>'
+          : '<span class="text-slate-500 font-bold text-xs uppercase bg-slate-100 px-2 py-1 rounded">Free</span>';
+
+        // Ẩn bớt API key để hiển thị an toàn
+        const maskedKey = k.key.substring(0, 8) + '...' + k.key.substring(k.key.length - 4);
+        
+        tr.innerHTML = `
+          <td class="p-3">
+            <div class="font-medium text-slate-800">${k.label}</div>
+            <div class="text-xs text-slate-400 font-mono mt-1">${maskedKey}</div>
+          </td>
+          <td class="p-3">${tierLabel}</td>
+          <td class="p-3">${statusHTML}</td>
+          <td class="p-3">
+            <button onclick="removeKey('${provider}', '${k.label}')" class="text-red-500 hover:text-red-700 font-medium transition-colors">Xoá</button>
+          </td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    function renderAll() {
+      renderList('google');
+      renderList('openai');
+      renderList('deepseek');
+    }
+
+    function exportConfig() {
+      const blob = new Blob([JSON.stringify(apiConfig, null, 2)], { type: "application/json" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = "clipbrand_api_keys_backup.json";
+      a.click();
+    }
+
+    function importConfig(e) {
+      const file = e.target.files[0];
+      if(!file) return;
+      const reader = new FileReader();
+      reader.onload = (ev) => {
+        try {
+          const parsed = JSON.parse(ev.target.result);
+          if(parsed && (parsed.google || parsed.openai || parsed.deepseek)) {
+             apiConfig = { ...apiConfig, ...parsed };
+             saveConfig();
+             alert("Nhập cấu hình thành công!");
+          } else {
+             alert("File JSON không đúng format!");
+          }
+        } catch(err) {
+          alert("Lỗi đọc file JSON. Vui lòng thử lại.");
+        }
+      };
+      reader.readAsText(file);
+    }
+
+    function clearAll() {
+      if(confirm("CẢNH BÁO: Hành động này sẽ xoá TOÀN BỘ API key trên trình duyệt này.\nBạn có chắc chắn?")) {
+        apiConfig = {
+          google: { keys: [], currentIndex: 0, model: "gemini-1.5-flash" },
+          openai: { keys: [], currentIndex: 0, model: "gpt-4o-mini" },
+          deepseek: { keys: [], currentIndex: 0, model: "deepseek-v4-flash" }
+        };
+        saveConfig();
+      }
+    }
+
+    // Khởi tạo
+    loadConfig();
+  </script>
+</body>
+</html>

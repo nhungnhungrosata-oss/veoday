@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="390" height="844" viewBox="0 0 390 844">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#0EA5E9" />
+      <stop offset="100%" stop-color="#slate-900" />
+    </linearGradient>
+  </defs>
+  <rect width="390" height="844" fill="#0EA5E9" />
+  <rect width="350" height="700" x="20" y="70" fill="white" rx="16" opacity="0.9" />
+  <text x="50%" y="40%" font-family="sans-serif" font-weight="bold" font-size="40" fill="#F5A623" text-anchor="middle" dominant-baseline="middle">ClipBrand AI</text>
+  <text x="50%" y="50%" font-family="sans-serif" font-weight="normal" font-size="18" fill="#333" text-anchor="middle" dominant-baseline="middle">Tạo video tự động</text>
+</svg>
