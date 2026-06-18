@@ -1,4 +1,6 @@
 const DEFAULT_LICENSE_SERVER = "https://key1-five.vercel.app";
+const TRIAL_START_KEY = "ibeegen_trial_started_at_v1";
+const TRIAL_DURATION_MS = 5 * 24 * 60 * 60 * 1000;
 
 const LICENSE_SERVER = String(
   import.meta.env.VITE_LICENSE_SERVER_URL || DEFAULT_LICENSE_SERVER,
@@ -16,6 +18,38 @@ export function getDeviceKey(): string {
   const newKey = makeDeviceKey();
   localStorage.setItem("ibeegen_device_key", newKey);
   return newKey;
+}
+
+export type TrialInfo = {
+  active: boolean;
+  started_at: number;
+  expires_at: number;
+  remaining_ms: number;
+  remaining_days: number;
+};
+
+export function getTrialInfo(now = Date.now()): TrialInfo {
+  const savedStart = Number(localStorage.getItem(TRIAL_START_KEY));
+  const hasValidStart =
+    Number.isFinite(savedStart) &&
+    savedStart > 0 &&
+    savedStart <= now;
+
+  const started_at = hasValidStart ? savedStart : now;
+  if (!hasValidStart) {
+    localStorage.setItem(TRIAL_START_KEY, String(started_at));
+  }
+
+  const expires_at = started_at + TRIAL_DURATION_MS;
+  const remaining_ms = Math.max(0, expires_at - now);
+
+  return {
+    active: remaining_ms > 0,
+    started_at,
+    expires_at,
+    remaining_ms,
+    remaining_days: Math.ceil(remaining_ms / (24 * 60 * 60 * 1000)),
+  };
 }
 
 export type LicenseInfo = {
