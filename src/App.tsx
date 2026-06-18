@@ -13,12 +13,13 @@ const INITIAL_STATE: AppState = {
   content: '',
   notes: '',
   sceneCount: 3,
-  voice: 'Bắc',
+  voice: 'Nam',
   style: 'professional',
   videoModel: 'Veo 3',
 };
 
 const IMAGE_LIBRARY_KEY = 'clipbrand_image_library';
+const LOCKED_FEATURE_MESSAGE = 'Chức năng được mở khi tham gia buổi Miễn Phí chuyên sâu';
 
 function cx(...classes: Array<string | false | null | undefined>) {
   return classes.filter(Boolean).join(' ');
@@ -300,13 +301,13 @@ export default function App() {
           </div>
 
           <div className="grid grid-cols-2 gap-4">
-            <div className="card"><h3 className="font-bold mb-2">Cảnh quay</h3><div className="flex items-center bg-brand-bg-sub rounded-xl border border-brand-border"><button className="p-3" onClick={() => setState((s) => ({ ...s, sceneCount: Math.max(1, s.sceneCount - 1) }))}><Minus /></button><span className="flex-1 text-center font-bold">{state.sceneCount}</span><button className="p-3" onClick={() => setState((s) => ({ ...s, sceneCount: Math.min(7, s.sceneCount + 1) }))}><Plus /></button></div></div>
-            <div className="card"><h3 className="font-bold mb-2">Giọng đọc</h3><select className="input h-12" value={state.voice} onChange={(e) => setState((s) => ({ ...s, voice: e.target.value as VoiceType }))}><option>Bắc</option><option>Trung</option><option>Nam</option></select></div>
+            <div className="card"><h3 className="font-bold mb-2">Cảnh quay</h3><div className="flex items-center bg-brand-bg-sub rounded-xl border border-brand-border"><button className="p-3" onClick={() => setState((s) => ({ ...s, sceneCount: Math.max(1, s.sceneCount - 1) }))}><Minus /></button><span className="flex-1 text-center font-bold">{state.sceneCount}</span><button className="p-3" onClick={() => { if (state.sceneCount >= 3) return toast.info(LOCKED_FEATURE_MESSAGE); setState((s) => ({ ...s, sceneCount: s.sceneCount + 1 })); }}><Plus /></button></div></div>
+            <div className="card"><h3 className="font-bold mb-2">Giọng đọc</h3><select className="input h-12" value={state.voice} onChange={(e) => { const voice = e.target.value as VoiceType; if (voice === 'Bắc') return toast.info(LOCKED_FEATURE_MESSAGE); setState((s) => ({ ...s, voice })); }}><option value="Bắc">🔒 Bắc</option><option>Trung</option><option>Nam</option></select></div>
           </div>
 
           <div className="card space-y-3">
             <h3 className="font-bold">Phong cách</h3>
-            <div className="grid grid-cols-2 gap-2">{(['energy','professional','gentle','natural'] as StyleType[]).map((v) => <button key={v} className={cx('p-3 rounded-xl border font-bold text-left', state.style === v ? 'bg-brand-blue text-white border-brand-blue' : 'bg-white border-brand-border')} onClick={() => setState((s) => ({ ...s, style: v }))}>{v === 'energy' ? '🚀 Năng lượng' : v === 'professional' ? '💼 Chuyên nghiệp' : v === 'gentle' ? '☕ Nhẹ nhàng' : '🏡 Tự nhiên'}</button>)}</div>
+            <div className="grid grid-cols-2 gap-2">{(['energy','professional','gentle','natural'] as StyleType[]).map((v) => <button key={v} className={cx('p-3 rounded-xl border font-bold text-left', state.style === v ? 'bg-brand-blue text-white border-brand-blue' : 'bg-white border-brand-border')} onClick={() => { if (v === 'gentle') return toast.info(LOCKED_FEATURE_MESSAGE); setState((s) => ({ ...s, style: v })); }}>{v === 'energy' ? '🚀 Năng lượng' : v === 'professional' ? '💼 Chuyên nghiệp' : v === 'gentle' ? '🔒 Nhẹ nhàng' : '🏡 Tự nhiên'}</button>)}</div>
           </div>
 
           <div className="card space-y-3"><h3 className="font-bold">Model Video</h3><div className="grid grid-cols-2 gap-2">{(['Veo 3','Gork'] as VideoModelType[]).map((v) => <button key={v} className={cx('p-3 rounded-xl border font-bold', state.videoModel === v ? 'bg-brand-blue text-white border-brand-blue' : 'bg-white border-brand-border')} onClick={() => setState((s) => ({ ...s, videoModel: v }))}>{v}<span className="block text-xs font-medium">Video {v === 'Veo 3' ? 8 : 10} giây</span></button>)}</div></div>
