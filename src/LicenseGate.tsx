@@ -1,13 +1,22 @@
 import React, { useCallback, useEffect, useState } from "react";
-import { checkLicense, getDeviceKey, LicenseInfo } from "./ibeegen-license";
+import {
+  checkLicense,
+  getDeviceKey,
+  getTrialInfo,
+  LicenseInfo,
+  TrialInfo,
+} from "./ibeegen-license";
 
 export default function LicenseGate({ children }: { children: React.ReactNode }) {
   const [info, setInfo] = useState<LicenseInfo | null>(null);
+  const [trial, setTrial] = useState<TrialInfo>(() => getTrialInfo());
   const [checking, setChecking] = useState(true);
   const [copied, setCopied] = useState(false);
 
   const verifyLicense = useCallback(async () => {
     setChecking(true);
+    setTrial(getTrialInfo());
+
     try {
       setInfo(await checkLicense());
     } catch (error) {
@@ -26,7 +35,22 @@ export default function LicenseGate({ children }: { children: React.ReactNode })
     void verifyLicense();
   }, [verifyLicense]);
 
-  const locked = checking || !info?.licensed;
+  useEffect(() => {
+    const refreshTrial = () => setTrial(getTrialInfo());
+    const timer = window.setInterval(refreshTrial, 60_000);
+    window.addEventListener("focus", refreshTrial);
+    document.addEventListener("visibilitychange", refreshTrial);
+
+    return () => {
+      window.clearInterval(timer);
+      window.removeEventListener("focus", refreshTrial);
+      document.removeEventListener("visibilitychange", refreshTrial);
+    };
+  }, []);
+
+  const licensed = info?.licensed === true;
+  const trialActive = trial.active;
+  const locked = checking || (!licensed && !trialActive);
 
   const copyKey = async () => {
     const key = info?.device_key || getDeviceKey();
@@ -105,13 +129,13 @@ export default function LicenseGate({ children }: { children: React.ReactNode })
             </div>
 
             <div id="license-title" style={{ fontSize: 22, fontWeight: 800, marginBottom: 8 }}>
-              {checking ? "Đang kiểm tra bản quyền..." : "Web chưa được kích hoạt"}
+              {checking ? "Đang kiểm tra bản quyền..." : "Thời gian dùng thử đã kết thúc"}
             </div>
 
             <div style={{ opacity: 0.9, marginBottom: 16, lineHeight: 1.55 }}>
               {checking
                 ? "Vui lòng chờ trong giây lát."
-                : "Copy mã bên dưới và gửi người bán để được kích hoạt. Sau khi kích hoạt, bấm “Kiểm tra lại” để sử dụng web."}
+                : "Bạn đã sử dụng đủ 5 ngày miễn phí. Copy mã bên dưới và gửi người bán để được kích hoạt, sau đó bấm “Kiểm tra lại”."}
             </div>
 
             {!checking && (
@@ -137,7 +161,7 @@ export default function LicenseGate({ children }: { children: React.ReactNode })
                       minWidth: 0,
                       flex: 1,
                       fontFamily:
-                        'ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace',
+                        'ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace',
                       fontSize: 14,
                       overflowWrap: "anywhere",
                     }}
