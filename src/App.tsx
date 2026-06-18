@@ -13,7 +13,7 @@ const INITIAL_STATE: AppState = {
   content: '',
   notes: '',
   sceneCount: 3,
-  voice: 'Nam',
+  voice: 'Bắc',
   style: 'professional',
   videoModel: 'Veo 3',
 };
@@ -302,7 +302,7 @@ export default function App() {
 
           <div className="grid grid-cols-2 gap-4">
             <div className="card"><h3 className="font-bold mb-2">Cảnh quay</h3><div className="flex items-center bg-brand-bg-sub rounded-xl border border-brand-border"><button className="p-3" onClick={() => setState((s) => ({ ...s, sceneCount: Math.max(1, s.sceneCount - 1) }))}><Minus /></button><span className="flex-1 text-center font-bold">{state.sceneCount}</span><button className="p-3" onClick={() => { if (state.sceneCount >= 3) return toast.info(LOCKED_FEATURE_MESSAGE); setState((s) => ({ ...s, sceneCount: s.sceneCount + 1 })); }}><Plus /></button></div></div>
-            <div className="card"><h3 className="font-bold mb-2">Giọng đọc</h3><select className="input h-12" value={state.voice} onChange={(e) => { const voice = e.target.value as VoiceType; if (voice === 'Bắc') return toast.info(LOCKED_FEATURE_MESSAGE); setState((s) => ({ ...s, voice })); }}><option value="Bắc">🔒 Bắc</option><option>Trung</option><option>Nam</option></select></div>
+            <div className="card"><h3 className="font-bold mb-2">Giọng đọc</h3><select className="input h-12" value={state.voice} onChange={(e) => setState((s) => ({ ...s, voice: e.target.value as VoiceType }))}><option>Bắc</option><option>Trung</option><option>Nam</option></select></div>
           </div>
 
           <div className="card space-y-3">
