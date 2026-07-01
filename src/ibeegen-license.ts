@@ -1,6 +1,6 @@
 const DEFAULT_LICENSE_SERVER = "https://key1-five.vercel.app";
 const TRIAL_START_KEY = "ibeegen_trial_started_at_v1";
-const TRIAL_DURATION_MS = 5 * 24 * 60 * 60 * 1000;
+const TRIAL_DURATION_MS = 3 * 24 * 60 * 60 * 1000;
 
 const LICENSE_SERVER = String(
   import.meta.env.VITE_LICENSE_SERVER_URL || DEFAULT_LICENSE_SERVER,
