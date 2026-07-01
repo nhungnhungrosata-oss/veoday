@@ -135,7 +135,7 @@ export default function LicenseGate({ children }: { children: React.ReactNode })
             <div style={{ opacity: 0.9, marginBottom: 16, lineHeight: 1.55 }}>
               {checking
                 ? "Vui lòng chờ trong giây lát."
-                : "Bạn đã sử dụng đủ 5 ngày miễn phí. Copy mã bên dưới và gửi người bán để được kích hoạt, sau đó bấm “Kiểm tra lại”."}
+                : "Bạn đã sử dụng đủ 3 ngày miễn phí. Copy mã bên dưới và gửi người bán để được kích hoạt, sau đó bấm “Kiểm tra lại”."}
             </div>
 
             {!checking && (
