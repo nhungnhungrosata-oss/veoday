@@ -1,6 +1,7 @@
 import React, { useCallback, useEffect, useState } from "react";
 import {
   checkLicense,
+  getDeviceInfo,
   getDeviceKey,
   getTrialInfo,
   LicenseInfo,
@@ -25,6 +26,7 @@ export default function LicenseGate({ children }: { children: React.ReactNode })
         licensed: false,
         device_key: getDeviceKey(),
         status: "INACTIVE",
+        device: getDeviceInfo(),
       });
     } finally {
       setChecking(false);
@@ -49,8 +51,24 @@ export default function LicenseGate({ children }: { children: React.ReactNode })
   }, []);
 
   const licensed = info?.licensed === true;
+  const deviceLocked =
+    info?.device_locked === true ||
+    info?.status === "DEVICE_LOCKED" ||
+    info?.status === "DEVICE_MISMATCH";
   const trialActive = trial.active;
-  const locked = checking || (!licensed && !trialActive);
+  const locked = checking || deviceLocked || (!licensed && !trialActive);
+
+  const lockTitle = checking
+    ? "Đang kiểm tra bản quyền..."
+    : deviceLocked
+      ? "Key đã được kích hoạt trên thiết bị khác"
+      : "Thời gian dùng thử đã kết thúc";
+
+  const lockMessage = checking
+    ? "Vui lòng chờ trong giây lát."
+    : deviceLocked
+      ? info?.message || "Key này đang được ràng buộc với thiết bị khác. Copy mã thiết bị hiện tại và gửi admin để reset hoặc chuyển thiết bị."
+      : "Bạn đã sử dụng đủ 3 ngày miễn phí. Copy mã bên dưới và gửi người bán để được kích hoạt, sau đó bấm “Kiểm tra lại”.";
 
   const copyKey = async () => {
     const key = info?.device_key || getDeviceKey();
@@ -129,13 +147,11 @@ export default function LicenseGate({ children }: { children: React.ReactNode })
             </div>
 
             <div id="license-title" style={{ fontSize: 22, fontWeight: 800, marginBottom: 8 }}>
-              {checking ? "Đang kiểm tra bản quyền..." : "Thời gian dùng thử đã kết thúc"}
+              {lockTitle}
             </div>
 
             <div style={{ opacity: 0.9, marginBottom: 16, lineHeight: 1.55 }}>
-              {checking
-                ? "Vui lòng chờ trong giây lát."
-                : "Bạn đã sử dụng đủ 3 ngày miễn phí. Copy mã bên dưới và gửi người bán để được kích hoạt, sau đó bấm “Kiểm tra lại”."}
+              {lockMessage}
             </div>
 
             {!checking && (
@@ -143,6 +159,18 @@ export default function LicenseGate({ children }: { children: React.ReactNode })
                 <div style={{ fontSize: 13, opacity: 0.78, marginBottom: 8 }}>
                   Trạng thái: <b>{info?.status || "INACTIVE"}</b>
                 </div>
+
+                {info?.device?.device_name && (
+                  <div style={{ fontSize: 13, opacity: 0.78, marginBottom: 8 }}>
+                    Thiết bị: <b>{info.device.device_name}</b>
+                  </div>
+                )}
+
+                {info?.device?.fingerprint && (
+                  <div style={{ fontSize: 13, opacity: 0.78, marginBottom: 8 }}>
+                    Mã nhận diện: <b>{info.device.fingerprint}</b>
+                  </div>
+                )}
 
                 <div
                   style={{
