@@ -1,4 +1,4 @@
-const DEFAULT_LICENSE_SERVER = "https://key1-five.vercel.app";
+const DEFAULT_LICENSE_SERVER = "https://keyweb-omega.vercel.app";
 const APP_ID = "veoday";
 const LEGACY_DEVICE_KEY_STORAGE_KEY = "ibeegen_device_key";
 const LICENSE_KEY_STORAGE_KEY = "ibeegen_license_key_v2";
