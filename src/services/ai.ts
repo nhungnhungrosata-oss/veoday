@@ -2,7 +2,7 @@ import { GoogleGenAI } from '@google/genai';
 import { AppState, GeneratedResult, StyleType } from '../types';
 import { v4 as uuidv4 } from 'uuid';
 
-const E = typeof import.meta !== 'undefined' && import.meta.env ? import.meta.env : {};
+const E: ImportMetaEnv = import.meta.env;
 
 const IDENTITY_LOCK =
   'Based on the reference image. Same person, same identity, same face, same hairstyle, same outfit, same background, same environment. Maintain 100% character consistency and scene consistency. No morphing, no identity change, no outfit change, no background change.';
@@ -26,6 +26,10 @@ const VIDEO_TECHNIQUE: Record<string, string> = {
 };
 
 type ApiKeyItem = { key: string; active?: boolean };
+type LocalProvider = 'google' | 'deepseek' | 'openai';
+type LocalApiConfig = Partial<Record<LocalProvider, { keys?: ApiKeyItem[]; model?: string }>> & {
+  providerOrder?: LocalProvider[];
+};
 
 function uniqueKeys(keys: Array<string | undefined | null>): string[] {
   const seen = new Set<string>();
@@ -39,12 +43,25 @@ function uniqueKeys(keys: Array<string | undefined | null>): string[] {
     });
 }
 
-function readLocalProviderKeys(provider: 'google' | 'deepseek' | 'openai'): string[] {
+function readLocalApiConfig(): LocalApiConfig {
   try {
-    if (typeof window === 'undefined') return [];
+    if (typeof window === 'undefined') return {};
     const raw = window.localStorage.getItem('api_key_manager_v1');
-    if (!raw) return [];
-    const config = JSON.parse(raw);
+    if (!raw) return {};
+    try {
+      return JSON.parse(raw);
+    } catch {
+      const bytes = Uint8Array.from(window.atob(raw), (character) => character.charCodeAt(0));
+      return JSON.parse(new TextDecoder().decode(bytes));
+    }
+  } catch {
+    return {};
+  }
+}
+
+function readLocalProviderKeys(provider: LocalProvider): string[] {
+  try {
+    const config = readLocalApiConfig();
     const keys = config?.[provider]?.keys;
     if (!Array.isArray(keys)) return [];
     return uniqueKeys(
@@ -55,6 +72,19 @@ function readLocalProviderKeys(provider: 'google' | 'deepseek' | 'openai'): stri
   } catch {
     return [];
   }
+}
+
+function readLocalProviderModel(provider: LocalProvider, fallback: string): string {
+  const model = readLocalApiConfig()?.[provider]?.model;
+  return typeof model === 'string' && model.trim() ? model.trim() : fallback;
+}
+
+function readLocalProviderOrder(): LocalProvider[] {
+  const configured = readLocalApiConfig()?.providerOrder;
+  const defaults: LocalProvider[] = ['google', 'deepseek', 'openai'];
+  if (!Array.isArray(configured)) return defaults;
+  const valid = configured.filter((provider): provider is LocalProvider => defaults.includes(provider));
+  return [...new Set([...valid, ...defaults])];
 }
 
 const GEMINI_KEYS = uniqueKeys([
@@ -133,8 +163,13 @@ async function callBackendProxyText(model: string, prompt: string): Promise<stri
   });
   const data = await res.json().catch(() => ({}));
   if (!res.ok || data?.ok === false) {
-    const err: any = new Error(data?.error || `Proxy HTTP ${res.status}`);
+    const message = typeof data?.error === 'string' ? data.error : data?.error?.message;
+    const details = Array.isArray(data?.attempts)
+      ? ` ${data.attempts.map((item: any) => `${item.provider}: ${item.status}`).join(' → ')}`
+      : '';
+    const err: any = new Error(`${message || `Proxy HTTP ${res.status}`}${details}`.trim());
     err.status = res.status;
+    err.code = data?.code;
     throw err;
   }
   if (!data?.text) throw new Error('AI proxy không trả về nội dung.');
@@ -214,14 +249,26 @@ async function callAIText(model: string, prompt: string): Promise<string> {
       console.warn('[AI] Proxy lỗi hoặc chưa có /api/generate, chuyển sang key browser.', err);
     }
   }
-  if (GEMINI_KEYS.length > 0) return callGeminiText(model, prompt);
-  if (DEEPSEEK_KEYS.length > 0) {
-    return callProviderKeys('DeepSeek', DEEPSEEK_KEYS, 'https://api.deepseek.com/chat/completions', E.VITE_DEEPSEEK_MODEL || 'deepseek-chat', prompt);
+
+  let lastError: any;
+  for (const provider of readLocalProviderOrder()) {
+    try {
+      if (provider === 'google' && GEMINI_KEYS.length > 0) return await callGeminiText(model, prompt);
+      if (provider === 'deepseek' && DEEPSEEK_KEYS.length > 0) {
+        const deepSeekModel = E.VITE_DEEPSEEK_MODEL || readLocalProviderModel('deepseek', 'deepseek-v4-flash');
+        return await callProviderKeys('DeepSeek', DEEPSEEK_KEYS, 'https://api.deepseek.com/chat/completions', deepSeekModel, prompt);
+      }
+      if (provider === 'openai' && OPENAI_KEYS.length > 0) {
+        const openAIModel = E.VITE_OPENAI_MODEL || readLocalProviderModel('openai', 'gpt-4o-mini');
+        return await callProviderKeys('OpenAI', OPENAI_KEYS, 'https://api.openai.com/v1/chat/completions', openAIModel, prompt);
+      }
+    } catch (error) {
+      lastError = error;
+      console.warn(`[AI] Provider ${provider} thất bại, chuyển provider tiếp theo.`, error);
+    }
   }
-  if (OPENAI_KEYS.length > 0) {
-    return callProviderKeys('OpenAI', OPENAI_KEYS, 'https://api.openai.com/v1/chat/completions', E.VITE_OPENAI_MODEL || 'gpt-4o-mini', prompt);
-  }
-  throw new Error('Chưa cấu hình API Key. Hãy thêm VITE_GEMINI_API_KEY hoặc bật backend /api/generate.');
+  if (lastError) throw lastError;
+  throw new Error('Chưa cấu hình API Key. Hãy thêm key trên server hoặc bật backend /api/generate.');
 }
 
 export async function suggestScripts(contentSnippet: string): Promise<string[]> {
