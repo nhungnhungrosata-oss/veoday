@@ -130,10 +130,10 @@
       <div class="flex flex-col md:flex-row gap-4 p-4 bg-slate-50 rounded-lg">
         <div>
           <label class="block font-semibold mb-2">Provider ưu tiên (Fallback):</label>
-          <select class="px-3 py-2 border border-brand-border rounded-lg min-w-[250px]">
-            <option>Google → DeepSeek → OpenAI</option>
-            <option>DeepSeek → Google → OpenAI</option>
-            <option>Google → OpenAI → DeepSeek</option>
+          <select id="provider-order" class="px-3 py-2 border border-brand-border rounded-lg min-w-[250px]" onchange="updateProviderOrder(this.value)">
+            <option value="google,deepseek,openai">Google → DeepSeek → OpenAI</option>
+            <option value="deepseek,google,openai">DeepSeek → Google → OpenAI</option>
+            <option value="google,openai,deepseek">Google → OpenAI → DeepSeek</option>
           </select>
           <p class="text-slate-500 text-sm mt-2">Hệ thống sẽ thử gọi theo thứ tự này nếu API hiện tại hết Quota.</p>
         </div>
@@ -157,7 +157,8 @@
   <script>
     const STORAGE_KEY = "api_key_manager_v1";
     let apiConfig = {
-      google: { keys: [], currentIndex: 0, model: "gemini-1.5-flash" },
+      providerOrder: ['google', 'deepseek', 'openai'],
+      google: { keys: [], currentIndex: 0, model: "gemini-2.5-flash" },
       openai: { keys: [], currentIndex: 0, model: "gpt-4o-mini" },
       deepseek: { keys: [], currentIndex: 0, model: "deepseek-v4-flash" }
     };
@@ -166,8 +167,15 @@
       const stored = localStorage.getItem(STORAGE_KEY);
       if (stored) {
         try {
-          apiConfig = {...apiConfig, ...JSON.parse(decodeURIComponent(escape(atob(stored))))};
-        } catch(e) { console.error(e) }
+          let parsed;
+          try {
+            parsed = JSON.parse(stored);
+          } catch {
+            const bytes = Uint8Array.from(atob(stored), c => c.charCodeAt(0));
+            parsed = JSON.parse(new TextDecoder().decode(bytes));
+          }
+          apiConfig = {...apiConfig, ...parsed};
+        } catch(e) { console.error('Không đọc được cấu hình API đã lưu.', e) }
       }
       renderAll();
     }
@@ -229,6 +237,12 @@
       saveConfig();
     }
 
+    function updateProviderOrder(value) {
+      const allowed = ['google', 'deepseek', 'openai'];
+      apiConfig.providerOrder = value.split(',').filter(provider => allowed.includes(provider));
+      saveConfig();
+    }
+
     function renderList(provider) {
       if(!document.getElementById('list-' + provider)) return;
       const tbody = document.getElementById('list-' + provider);
@@ -276,6 +290,8 @@
       renderList('google');
       renderList('openai');
       renderList('deepseek');
+      const orderSelect = document.getElementById('provider-order');
+      if (orderSelect) orderSelect.value = (apiConfig.providerOrder || ['google', 'deepseek', 'openai']).join(',');
     }
 
     function exportConfig() {
@@ -311,7 +327,8 @@
     function clearAll() {
       if(confirm("CẢNH BÁO: Hành động này sẽ xoá TOÀN BỘ API key trên trình duyệt này.\nBạn có chắc chắn?")) {
         apiConfig = {
-          google: { keys: [], currentIndex: 0, model: "gemini-1.5-flash" },
+          providerOrder: ['google', 'deepseek', 'openai'],
+          google: { keys: [], currentIndex: 0, model: "gemini-2.5-flash" },
           openai: { keys: [], currentIndex: 0, model: "gpt-4o-mini" },
           deepseek: { keys: [], currentIndex: 0, model: "deepseek-v4-flash" }
         };
