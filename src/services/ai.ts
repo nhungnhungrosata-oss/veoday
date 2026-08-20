@@ -5,7 +5,7 @@ import { v4 as uuidv4 } from 'uuid';
 const E: ImportMetaEnv = import.meta.env;
 
 const IDENTITY_LOCK =
-  'Based on the reference image. Same person, same identity, same face, same hairstyle, same outfit, same background, same environment. Maintain 100% character consistency and scene consistency. No morphing, no identity change, no outfit change, no background change.';
+  'Based on the reference image. Same person, same identity, same face, same hairstyle, same outfit, same background, same environment, same pose, same body position, same body orientation, same framing, and same camera angle. Maintain 100% character consistency and scene consistency. No morphing, no identity change, no outfit change, no background change, no pose change.';
 
 const VOICE_DIRECTION: Record<string, string> = {
   Bắc: 'The person is speaking Vietnamese with a clear, standard Northern Vietnamese accent (giọng Bắc Hà Nội). Speech is articulate and natural. Natural lip movements perfectly synchronized with the speech rhythm.',
@@ -21,7 +21,7 @@ const STYLE_DIRECTION: Record<StyleType, string> = {
 };
 
 const FIXED_VIDEO_DIRECTION =
-  'The person sits confidently, looking directly at the camera with a serious yet engaging expression. Static camera, locked shot, medium close-up framing, eye-level angle, no zoom, no pan. Subtle facial micro-expressions, natural eye blinking every 3-4 seconds, gentle realistic head movements, minimal natural hand gestures when emphasizing key points. Clean indoor setting, soft flattering lighting, cinematic shallow depth of field, realistic skin texture, photorealistic rendering. No text overlay, no watermark.';
+  'Preserve the exact pose and body position from the reference image. Do not force the person to sit, stand, turn, walk, change posture, or reposition the hands or body. Keep the original framing, camera angle, body orientation, background, and environment unchanged. Static camera, locked shot, no zoom, no pan. Allow only natural lip sync, subtle facial micro-expressions, natural eye blinking every 3-4 seconds, and very small realistic head movements that do not alter the original pose. No extra hand gestures that change the reference pose. Photorealistic rendering. No text overlay, no watermark.';
 
 type ApiKeyItem = { key: string; active?: boolean };
 type LocalProvider = 'google' | 'deepseek' | 'openai';
@@ -131,7 +131,7 @@ function trimWords(text: string, maxWords: number): string {
 }
 
 function getVoiceWordLimit(videoModel: string) {
-  // Veo 3 chỉ 8 giây, lời thoại phải ngắn. Chặn cứng tối đa 28 từ/cảnh.
+  // Fix: Veo 3 chỉ 8 giây, lời thoại phải ngắn. Chặn cứng tối đa 28 từ/cảnh.
   if (videoModel === 'Veo 3') return { minWords: 18, maxWords: 28, seconds: 8 };
   return { minWords: 24, maxWords: 36, seconds: 10 };
 }
